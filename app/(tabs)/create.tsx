@@ -20,6 +20,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useEntries } from "@/context/EntriesContext";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { customColors } from "@/constants/Colors";
 
 interface Entry {
   date: Date;
@@ -111,7 +112,7 @@ export default function CreateScreen() {
               style={styles.dateButton}
             >
               <LinearGradient
-                colors={["#4FD1C5", "#2C5282"]}
+                colors={[customColors.teal, customColors.blue]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.gradientButton}
@@ -137,7 +138,7 @@ export default function CreateScreen() {
                     style={styles.datePickerButton}
                   >
                     <LinearGradient
-                      colors={["#FF6B6B", "#FF3B30"]}
+                      colors={[customColors.red, customColors.redDark]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.gradientButton}
@@ -152,7 +153,7 @@ export default function CreateScreen() {
                     style={styles.datePickerButton}
                   >
                     <LinearGradient
-                      colors={["#4FD1C5", "#2C5282"]}
+                      colors={[customColors.teal, customColors.blue]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.gradientButton}
@@ -181,7 +182,7 @@ export default function CreateScreen() {
 
               <ThemedView style={styles.inputGroup}>
                 <TextInput
-                  style={[styles.textInput, { color: "white" }]}
+                  style={[styles.textInput, { color: customColors.white }]}
                   value={currentEntry.answer}
                   onChangeText={(text) =>
                     setCurrentEntry((prev) => ({ ...prev, answer: text }))
@@ -191,7 +192,7 @@ export default function CreateScreen() {
                       ? `What is your favorite ${currentEntry.favorite}?`
                       : "Select a category..."
                   }
-                  placeholderTextColor="#666"
+                  placeholderTextColor={customColors.textGray}
                   multiline
                 />
               </ThemedView>
@@ -207,7 +208,9 @@ export default function CreateScreen() {
             >
               <LinearGradient
                 colors={
-                  isFormValid ? ["#4FD1C5", "#2C5282"] : ["#cccccc", "#999999"]
+                  isFormValid
+                    ? [customColors.teal, customColors.blue]
+                    : [customColors.disabledGray, customColors.disabledDarkGray]
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -306,15 +309,17 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: customColors.borderGray,
     borderRadius: 8,
     overflow: "hidden",
-    backgroundColor: Platform.OS === "ios" ? "transparent" : "#2C5282",
+    backgroundColor:
+      Platform.OS === "ios" ? customColors.transparent : customColors.blue,
   },
   picker: {
     height: Platform.OS === "ios" ? 150 : 50,
-    color: "white",
-    backgroundColor: Platform.OS === "ios" ? "transparent" : "#2C5282",
+    color: customColors.white,
+    backgroundColor:
+      Platform.OS === "ios" ? customColors.transparent : customColors.blue,
   },
   dateButton: {
     borderRadius: 8,
@@ -323,7 +328,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: customColors.borderGray,
     borderRadius: 8,
     padding: 12,
     minHeight: 80,
@@ -350,7 +355,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   datePickerButtonText: {
-    color: "white",
+    color: customColors.white,
     fontWeight: "bold",
   },
   gradientButton: {
@@ -360,11 +365,11 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   saveButtonText: {
-    color: "white",
+    color: customColors.white,
     fontWeight: "bold",
   },
   dateButtonText: {
-    color: "white",
+    color: customColors.white,
     fontWeight: "bold",
     textAlign: "left",
     paddingHorizontal: 16,
@@ -374,31 +379,31 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: customColors.borderGray,
     borderRadius: 8,
     padding: 12,
-    backgroundColor: "#2C5282",
+    backgroundColor: customColors.blue,
   },
   dropdownButtonEmpty: {
-    backgroundColor: "transparent",
+    backgroundColor: customColors.transparent,
   },
   dropdownButtonText: {
-    color: "white",
+    color: customColors.white,
     fontSize: 16,
   },
   dropdownButtonTextEmpty: {
-    color: "#666",
+    color: customColors.textGray,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: customColors.overlay,
   },
   dropdownList: {
-    backgroundColor: "#2C5282",
+    backgroundColor: customColors.blue,
     borderRadius: 12,
     overflow: "hidden",
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: customColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -410,14 +415,14 @@ const styles = StyleSheet.create({
   dropdownItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+    borderBottomColor: customColors.dropdownBorder,
   },
   dropdownItemText: {
-    color: "white",
+    color: customColors.white,
     fontSize: 16,
   },
   dropdownItemSelected: {
     fontWeight: "bold",
-    color: "#4FD1C5",
+    color: customColors.teal,
   },
 });

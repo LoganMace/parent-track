@@ -10,6 +10,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { EntriesProvider } from "@/context/EntriesContext";
+import { ProfilesProvider } from "@/context/ProfilesContext";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 
@@ -33,14 +34,18 @@ export default function RootLayout() {
   }
 
   return (
-    <EntriesProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </EntriesProvider>
+    <ProfilesProvider>
+      <EntriesProvider>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        >
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </EntriesProvider>
+    </ProfilesProvider>
   );
 }
