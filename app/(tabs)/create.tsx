@@ -1,34 +1,42 @@
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
   TextInput,
   TouchableOpacity,
-  Platform,
   Keyboard,
-  View,
-  Modal,
-  Dimensions,
   TouchableWithoutFeedback,
 } from "react-native";
-import { useState, useCallback } from "react";
-import { useFocusEffect } from "expo-router";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { useFocusEffect, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useEntries } from "@/context/EntriesContext";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import {
+  useEntries,
+  EntryType,
+  Entry,
+  FavoriteEntry,
+  MeasurementEntry,
+  MemoryEntry,
+  JournalEntry,
+  MilestoneEntry,
+} from "@/context/EntriesContext";
+import { useProfiles } from "@/context/ProfilesContext";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { customColors } from "@/constants/Colors";
 
-interface Entry {
-  date: Date;
-  favorite: string;
-  answer: string;
-}
+const ENTRY_TYPES: EntryType[] = [
+  "Favorite",
+  "Measurement",
+  "Memory",
+  "Journal",
+  "Milestone",
+];
 
-const FAVORITE_OPTIONS = [
+const FAVORITE_CATEGORIES = [
   "Color",
   "Food",
   "Animal",
@@ -39,32 +47,104 @@ const FAVORITE_OPTIONS = [
   "Game",
 ];
 
+const MEASUREMENT_TYPES = [
+  "Height",
+  "Weight",
+  "Head Circumference",
+  "Shoe Size",
+  "Clothing Size",
+];
+
+const MILESTONE_CATEGORIES = [
+  "First Steps",
+  "First Words",
+  "First Day of School",
+  "Lost Tooth",
+  "Birthday",
+  "Achievement",
+  "Other",
+];
+
+function EmptyState() {
+  const router = useRouter();
+
+  return (
+    <ThemedView style={styles.emptyContainer}>
+      <IconSymbol name="person.2.fill" size={48} color={customColors.teal} />
+      <ThemedText style={styles.emptyTitle}>No Profiles Yet</ThemedText>
+      <ThemedText style={styles.emptyText}>
+        Create a profile for your child to start tracking their journey.
+      </ThemedText>
+      <TouchableOpacity
+        onPress={() => router.push("/(tabs)/profiles")}
+        style={styles.createProfileButton}
+      >
+        <LinearGradient
+          colors={[customColors.teal, customColors.blue]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradientButton}
+        >
+          <ThemedText style={styles.createProfileButtonText}>
+            Create Profile
+          </ThemedText>
+        </LinearGradient>
+      </TouchableOpacity>
+    </ThemedView>
+  );
+}
+
 export default function CreateScreen() {
   const { addEntry } = useEntries();
-  const [currentEntry, setCurrentEntry] = useState<Entry>({
-    date: new Date(),
-    favorite: "",
-    answer: "",
-  });
+  const { profiles } = useProfiles();
+  const [selectedProfile, setSelectedProfile] = useState<string>("");
+  const [entryType, setEntryType] = useState<EntryType>("Favorite");
+  const [entryDate, setEntryDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [tempDate, setTempDate] = useState<Date>(new Date());
-  const [dropdownLayout, setDropdownLayout] = useState({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  });
+
+  // Favorite type fields
+  const [favoriteCategory, setFavoriteCategory] = useState("");
+  const [favoriteAnswer, setFavoriteAnswer] = useState("");
+
+  // Measurement type fields
+  const [measurementType, setMeasurementType] = useState("");
+  const [measurementValue, setMeasurementValue] = useState("");
+  const [measurementUnit, setMeasurementUnit] = useState("");
+
+  // Memory type fields
+  const [memoryTitle, setMemoryTitle] = useState("");
+  const [memoryDescription, setMemoryDescription] = useState("");
+  const [memoryMood, setMemoryMood] = useState("");
+
+  // Journal type fields
+  const [journalTitle, setJournalTitle] = useState("");
+  const [journalContent, setJournalContent] = useState("");
+
+  // Milestone type fields
+  const [milestoneTitle, setMilestoneTitle] = useState("");
+  const [milestoneDescription, setMilestoneDescription] = useState("");
+  const [milestoneCategory, setMilestoneCategory] = useState("");
 
   const resetForm = useCallback(() => {
-    setCurrentEntry({
-      date: new Date(),
-      favorite: "",
-      answer: "",
-    });
+    setSelectedProfile("");
+    setEntryType("Favorite");
+    setEntryDate(new Date());
     setShowDatePicker(false);
-    setShowDropdown(false);
-    setTempDate(new Date());
+
+    // Reset all type-specific fields
+    setFavoriteCategory("");
+    setFavoriteAnswer("");
+    setMeasurementType("");
+    setMeasurementValue("");
+    setMeasurementUnit("");
+    setMemoryTitle("");
+    setMemoryDescription("");
+    setMemoryMood("");
+    setJournalTitle("");
+    setJournalContent("");
+    setMilestoneTitle("");
+    setMilestoneDescription("");
+    setMilestoneCategory("");
   }, []);
 
   useFocusEffect(
@@ -75,208 +155,342 @@ export default function CreateScreen() {
     }, [resetForm])
   );
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    const currentDate = selectedDate || tempDate;
-    setTempDate(currentDate);
-  };
+  const isFormValid = () => {
+    if (!selectedProfile) return false;
 
-  const confirmDate = () => {
-    setCurrentEntry((prev) => ({ ...prev, date: tempDate }));
-    setShowDatePicker(false);
-  };
-
-  const saveEntry = () => {
-    if (currentEntry.favorite && currentEntry.answer.trim()) {
-      Keyboard.dismiss();
-      addEntry(currentEntry);
-      setCurrentEntry({ date: new Date(), favorite: "", answer: "" });
+    switch (entryType) {
+      case "Favorite":
+        return Boolean(favoriteCategory && favoriteAnswer.trim());
+      case "Measurement":
+        return Boolean(measurementType && measurementValue && measurementUnit);
+      case "Memory":
+        return Boolean(memoryTitle.trim() && memoryDescription.trim());
+      case "Journal":
+        return Boolean(journalTitle.trim() && journalContent.trim());
+      case "Milestone":
+        return Boolean(milestoneTitle.trim() && milestoneDescription.trim());
+      default:
+        return false;
     }
   };
 
-  const isFormValid = currentEntry.favorite && currentEntry.answer.trim();
+  const handleSave = () => {
+    if (!isFormValid()) return;
+
+    let entry: Omit<Entry, "id">;
+
+    switch (entryType) {
+      case "Favorite":
+        entry = {
+          type: "Favorite",
+          date: entryDate,
+          profileId: selectedProfile,
+          category: favoriteCategory,
+          answer: favoriteAnswer,
+        } as Omit<FavoriteEntry, "id">;
+        break;
+      case "Measurement":
+        entry = {
+          type: "Measurement",
+          date: entryDate,
+          profileId: selectedProfile,
+          measurement: measurementType,
+          value: parseFloat(measurementValue),
+          unit: measurementUnit,
+        } as Omit<MeasurementEntry, "id">;
+        break;
+      case "Memory":
+        entry = {
+          type: "Memory",
+          date: entryDate,
+          profileId: selectedProfile,
+          title: memoryTitle,
+          description: memoryDescription,
+          mood: memoryMood || undefined,
+        } as Omit<MemoryEntry, "id">;
+        break;
+      case "Journal":
+        entry = {
+          type: "Journal",
+          date: entryDate,
+          profileId: selectedProfile,
+          title: journalTitle,
+          content: journalContent,
+        } as Omit<JournalEntry, "id">;
+        break;
+      case "Milestone":
+        entry = {
+          type: "Milestone",
+          date: entryDate,
+          profileId: selectedProfile,
+          title: milestoneTitle,
+          description: milestoneDescription,
+          category: milestoneCategory,
+        } as Omit<MilestoneEntry, "id">;
+        break;
+      default:
+        return;
+    }
+
+    addEntry(entry);
+    resetForm();
+  };
+
+  const renderEntryFields = () => {
+    switch (entryType) {
+      case "Favorite":
+        return (
+          <>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Category</ThemedText>
+              <Dropdown
+                options={FAVORITE_CATEGORIES}
+                value={favoriteCategory}
+                onChange={setFavoriteCategory}
+                placeholder="Select a category..."
+              />
+            </ThemedView>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Answer</ThemedText>
+              <TextInput
+                style={[styles.textInput, { color: customColors.white }]}
+                value={favoriteAnswer}
+                onChangeText={setFavoriteAnswer}
+                placeholder={
+                  favoriteCategory
+                    ? `What is your favorite ${favoriteCategory}?`
+                    : "Select a category first..."
+                }
+                placeholderTextColor={customColors.textGray}
+                multiline
+              />
+            </ThemedView>
+          </>
+        );
+
+      case "Measurement":
+        return (
+          <>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Type</ThemedText>
+              <Dropdown
+                options={MEASUREMENT_TYPES}
+                value={measurementType}
+                onChange={setMeasurementType}
+                placeholder="Select measurement type..."
+              />
+            </ThemedView>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Value</ThemedText>
+              <TextInput
+                style={[styles.textInput, { color: customColors.white }]}
+                value={measurementValue}
+                onChangeText={setMeasurementValue}
+                placeholder="Enter value..."
+                placeholderTextColor={customColors.textGray}
+                keyboardType="numeric"
+              />
+            </ThemedView>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Unit</ThemedText>
+              <TextInput
+                style={[styles.textInput, { color: customColors.white }]}
+                value={measurementUnit}
+                onChangeText={setMeasurementUnit}
+                placeholder="Enter unit (cm, kg, etc.)..."
+                placeholderTextColor={customColors.textGray}
+              />
+            </ThemedView>
+          </>
+        );
+
+      case "Memory":
+        return (
+          <>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Title</ThemedText>
+              <TextInput
+                style={[styles.textInput, { color: customColors.white }]}
+                value={memoryTitle}
+                onChangeText={setMemoryTitle}
+                placeholder="Enter memory title..."
+                placeholderTextColor={customColors.textGray}
+              />
+            </ThemedView>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Description</ThemedText>
+              <TextInput
+                style={[
+                  styles.textInput,
+                  { color: customColors.white, height: 120 },
+                ]}
+                value={memoryDescription}
+                onChangeText={setMemoryDescription}
+                placeholder="Describe this memory..."
+                placeholderTextColor={customColors.textGray}
+                multiline
+              />
+            </ThemedView>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Mood (optional)</ThemedText>
+              <TextInput
+                style={[styles.textInput, { color: customColors.white }]}
+                value={memoryMood}
+                onChangeText={setMemoryMood}
+                placeholder="How were you feeling?"
+                placeholderTextColor={customColors.textGray}
+              />
+            </ThemedView>
+          </>
+        );
+
+      case "Journal":
+        return (
+          <>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Title</ThemedText>
+              <TextInput
+                style={[styles.textInput, { color: customColors.white }]}
+                value={journalTitle}
+                onChangeText={setJournalTitle}
+                placeholder="Enter journal title..."
+                placeholderTextColor={customColors.textGray}
+              />
+            </ThemedView>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Content</ThemedText>
+              <TextInput
+                style={[
+                  styles.textInput,
+                  { color: customColors.white, height: 200 },
+                ]}
+                value={journalContent}
+                onChangeText={setJournalContent}
+                placeholder="Write your journal entry..."
+                placeholderTextColor={customColors.textGray}
+                multiline
+              />
+            </ThemedView>
+          </>
+        );
+
+      case "Milestone":
+        return (
+          <>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Category</ThemedText>
+              <Dropdown
+                options={MILESTONE_CATEGORIES}
+                value={milestoneCategory}
+                onChange={setMilestoneCategory}
+                placeholder="Select milestone category..."
+              />
+            </ThemedView>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Title</ThemedText>
+              <TextInput
+                style={[styles.textInput, { color: customColors.white }]}
+                value={milestoneTitle}
+                onChangeText={setMilestoneTitle}
+                placeholder="Enter milestone title..."
+                placeholderTextColor={customColors.textGray}
+              />
+            </ThemedView>
+            <ThemedView style={styles.inputGroup}>
+              <ThemedText style={styles.inputLabel}>Description</ThemedText>
+              <TextInput
+                style={[
+                  styles.textInput,
+                  { color: customColors.white, height: 120 },
+                ]}
+                value={milestoneDescription}
+                onChangeText={setMilestoneDescription}
+                placeholder="Describe this milestone..."
+                placeholderTextColor={customColors.textGray}
+                multiline
+              />
+            </ThemedView>
+          </>
+        );
+    }
+  };
+
+  if (!profiles.length) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <EmptyState />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.safeArea}>
         <ThemedView style={styles.container}>
-          <ThemedView style={styles.inputContainer}>
-            <TouchableOpacity
-              onPress={() => {
-                if (showDatePicker) {
-                  setShowDatePicker(false);
-                } else {
-                  setTempDate(currentEntry.date);
-                  setShowDatePicker(true);
-                }
-              }}
-              style={styles.dateButton}
-            >
-              <LinearGradient
-                colors={[customColors.teal, customColors.blue]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.gradientButton}
-              >
-                <ThemedText style={styles.dateButtonText}>
-                  {currentEntry.date.toLocaleDateString()}
-                </ThemedText>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            {showDatePicker && (
-              <ThemedView style={styles.datePickerContainer}>
-                <DateTimePicker
-                  testID="datePicker"
-                  value={tempDate}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  onChange={onDateChange}
-                />
-                <ThemedView style={styles.datePickerButtons}>
-                  <TouchableOpacity
-                    onPress={() => setShowDatePicker(false)}
-                    style={styles.datePickerButton}
-                  >
-                    <LinearGradient
-                      colors={[customColors.red, customColors.redDark]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.gradientButton}
-                    >
-                      <ThemedText style={styles.datePickerButtonText}>
-                        Cancel
-                      </ThemedText>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={confirmDate}
-                    style={styles.datePickerButton}
-                  >
-                    <LinearGradient
-                      colors={[customColors.teal, customColors.blue]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.gradientButton}
-                    >
-                      <ThemedText style={styles.datePickerButtonText}>
-                        Confirm
-                      </ThemedText>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </ThemedView>
-              </ThemedView>
-            )}
-
+          <ScrollView style={styles.scrollView}>
             <ThemedView style={styles.formContainer}>
               <ThemedView style={styles.inputGroup}>
-                <ThemedText style={styles.inputLabel}>Favorite:</ThemedText>
+                <ThemedText style={styles.inputLabel}>Profile</ThemedText>
                 <Dropdown
-                  options={FAVORITE_OPTIONS}
-                  value={currentEntry.favorite}
-                  onChange={(value) =>
-                    setCurrentEntry((prev) => ({ ...prev, favorite: value }))
-                  }
-                  placeholder="What is your favorite..."
+                  options={profiles.map((p) => p.name)}
+                  value={selectedProfile}
+                  onChange={setSelectedProfile}
+                  placeholder="Select a profile..."
                 />
               </ThemedView>
 
               <ThemedView style={styles.inputGroup}>
-                <TextInput
-                  style={[styles.textInput, { color: customColors.white }]}
-                  value={currentEntry.answer}
-                  onChangeText={(text) =>
-                    setCurrentEntry((prev) => ({ ...prev, answer: text }))
-                  }
-                  placeholder={
-                    currentEntry.favorite
-                      ? `What is your favorite ${currentEntry.favorite}?`
-                      : "Select a category..."
-                  }
-                  placeholderTextColor={customColors.textGray}
-                  multiline
+                <ThemedText style={styles.inputLabel}>Entry Type</ThemedText>
+                <Dropdown
+                  options={ENTRY_TYPES}
+                  value={entryType}
+                  onChange={(value) => setEntryType(value as EntryType)}
+                  placeholder="Select entry type..."
                 />
               </ThemedView>
-            </ThemedView>
 
-            <TouchableOpacity
-              onPress={saveEntry}
-              style={[
-                styles.saveButton,
-                !isFormValid && styles.saveButtonDisabled,
-              ]}
-              disabled={!isFormValid}
-            >
-              <LinearGradient
-                colors={
-                  isFormValid
-                    ? [customColors.teal, customColors.blue]
-                    : [customColors.disabledGray, customColors.disabledDarkGray]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.gradientButton}
+              <ThemedView style={styles.inputGroup}>
+                <ThemedText style={styles.inputLabel}>Date</ThemedText>
+                <DatePicker
+                  value={entryDate}
+                  onChange={setEntryDate}
+                  isVisible={showDatePicker}
+                  onClose={() => setShowDatePicker(false)}
+                  onOpen={() => setShowDatePicker(true)}
+                />
+              </ThemedView>
+
+              {renderEntryFields()}
+
+              <TouchableOpacity
+                onPress={handleSave}
+                style={[
+                  styles.saveButton,
+                  !isFormValid() && styles.saveButtonDisabled,
+                ]}
+                disabled={!isFormValid()}
               >
-                <ThemedText style={styles.saveButtonText}>
-                  Save Entry
-                </ThemedText>
-              </LinearGradient>
-            </TouchableOpacity>
-          </ThemedView>
-        </ThemedView>
-
-        <Modal
-          visible={showDropdown}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowDropdown(false)}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => {
-              setShowDropdown(false);
-              Keyboard.dismiss();
-            }}
-          >
-            <ThemedView
-              style={[
-                styles.dropdownList,
-                {
-                  position: "absolute",
-                  top: dropdownLayout.y + dropdownLayout.height,
-                  left: dropdownLayout.x,
-                  width: dropdownLayout.width,
-                },
-              ]}
-            >
-              <ScrollView bounces={false} style={styles.dropdownScroll}>
-                {FAVORITE_OPTIONS.map((option) => (
-                  <TouchableOpacity
-                    key={option}
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setCurrentEntry((prev) => ({
-                        ...prev,
-                        favorite: option,
-                      }));
-                      setShowDropdown(false);
-                    }}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.dropdownItemText,
-                        currentEntry.favorite === option &&
-                          styles.dropdownItemSelected,
-                      ]}
-                    >
-                      {option}
-                    </ThemedText>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                <LinearGradient
+                  colors={
+                    isFormValid()
+                      ? [customColors.teal, customColors.blue]
+                      : [
+                          customColors.disabledGray,
+                          customColors.disabledDarkGray,
+                        ]
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.gradientButton}
+                >
+                  <ThemedText style={styles.saveButtonText}>
+                    Save Entry
+                  </ThemedText>
+                </LinearGradient>
+              </TouchableOpacity>
             </ThemedView>
-          </TouchableOpacity>
-        </Modal>
+          </ScrollView>
+        </ThemedView>
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );
@@ -288,141 +502,76 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 16,
   },
-  title: {
-    marginBottom: 16,
-  },
-  inputContainer: {
-    marginBottom: 16,
-    gap: 12,
+  scrollView: {
+    flex: 1,
   },
   formContainer: {
-    gap: 12,
+    padding: 16,
+    gap: 16,
   },
   inputGroup: {
-    gap: 4,
+    gap: 8,
   },
   inputLabel: {
     fontSize: 16,
     fontWeight: "bold",
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: customColors.borderGray,
-    borderRadius: 8,
-    overflow: "hidden",
-    backgroundColor:
-      Platform.OS === "ios" ? customColors.transparent : customColors.blue,
-  },
-  picker: {
-    height: Platform.OS === "ios" ? 150 : 50,
     color: customColors.white,
-    backgroundColor:
-      Platform.OS === "ios" ? customColors.transparent : customColors.blue,
-  },
-  dateButton: {
-    borderRadius: 8,
-    overflow: "hidden",
-    alignSelf: "flex-start",
   },
   textInput: {
     borderWidth: 1,
     borderColor: customColors.borderGray,
     borderRadius: 8,
     padding: 12,
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  saveButton: {
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  saveButtonDisabled: {
-    opacity: 0.7,
-  },
-  datePickerContainer: {
-    alignItems: "center",
-    gap: 12,
-  },
-  datePickerButtons: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 8,
-  },
-  datePickerButton: {
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  datePickerButtonText: {
-    color: customColors.white,
-    fontWeight: "bold",
+    minHeight: 48,
+    backgroundColor: customColors.white + "10",
   },
   gradientButton: {
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
-    minWidth: 100,
+  },
+  saveButton: {
+    borderRadius: 8,
+    overflow: "hidden",
+    marginTop: 8,
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
   },
   saveButtonText: {
     color: customColors.white,
     fontWeight: "bold",
   },
-  dateButtonText: {
-    color: customColors.white,
-    fontWeight: "bold",
-    textAlign: "left",
-    paddingHorizontal: 16,
-  },
-  dropdownButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: customColors.borderGray,
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: customColors.blue,
-  },
-  dropdownButtonEmpty: {
-    backgroundColor: customColors.transparent,
-  },
-  dropdownButtonText: {
-    color: customColors.white,
-    fontSize: 16,
-  },
-  dropdownButtonTextEmpty: {
-    color: customColors.textGray,
-  },
-  modalOverlay: {
+  emptyContainer: {
     flex: 1,
-    backgroundColor: customColors.overlay,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+    gap: 16,
   },
-  dropdownList: {
-    backgroundColor: customColors.blue,
-    borderRadius: 12,
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: customColors.white,
+    marginTop: 16,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: customColors.textGray,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  createProfileButton: {
+    width: "100%",
+    maxWidth: 300,
+    borderRadius: 8,
     overflow: "hidden",
-    elevation: 5,
-    shadowColor: customColors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    maxHeight: 200,
+    marginTop: 8,
   },
-  dropdownScroll: {
-    flexGrow: 0,
-  },
-  dropdownItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: customColors.dropdownBorder,
-  },
-  dropdownItemText: {
+  createProfileButtonText: {
     color: customColors.white,
     fontSize: 16,
-  },
-  dropdownItemSelected: {
     fontWeight: "bold",
-    color: customColors.teal,
   },
 });
