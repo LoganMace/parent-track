@@ -10,6 +10,7 @@ import {
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { customColors } from "@/constants/Colors";
 
 interface DropdownProps {
   options: string[];
@@ -56,7 +57,7 @@ export function Dropdown({
         <IconSymbol
           size={20}
           name="chevron.down"
-          color={value ? "white" : "#666"}
+          color={value ? customColors.white : customColors.textGray}
         />
       </TouchableOpacity>
 
@@ -76,7 +77,7 @@ export function Dropdown({
               styles.dropdownList,
               {
                 position: "absolute",
-                top: dropdownLayout.y + dropdownLayout.height,
+                top: dropdownLayout.y + dropdownLayout.height + 60,
                 left: dropdownLayout.x,
                 width: dropdownLayout.width,
               },
@@ -116,30 +117,31 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: customColors.borderGray,
     borderRadius: 8,
     padding: 12,
-    backgroundColor: "#2C5282",
+    backgroundColor: customColors.white + "10",
   },
   dropdownButtonEmpty: {
-    backgroundColor: "transparent",
+    backgroundColor: customColors.transparent,
   },
   dropdownButtonText: {
-    color: "white",
+    color: customColors.white,
     fontSize: 16,
   },
   dropdownButtonTextEmpty: {
-    color: "#666",
+    color: customColors.textGray,
   },
   modalOverlay: {
     flex: 1,
+    backgroundColor: customColors.overlay,
   },
   dropdownList: {
-    backgroundColor: "#2C5282",
+    backgroundColor: customColors.darkGray,
     borderRadius: 12,
     overflow: "hidden",
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: customColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -151,14 +153,14 @@ const styles = StyleSheet.create({
   dropdownItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+    borderBottomColor: customColors.dropdownBorder,
   },
   dropdownItemText: {
-    color: "white",
+    color: customColors.white,
     fontSize: 16,
   },
   dropdownItemSelected: {
     fontWeight: "bold",
-    color: "#4FD1C5",
+    color: customColors.teal,
   },
 });

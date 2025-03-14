@@ -4,6 +4,10 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useEntries } from "@/context/EntriesContext";
 import { LinearGradient } from "expo-linear-gradient";
+import { useFocusEffect } from "expo-router";
+import { useRef, useCallback } from "react";
+import React from "react";
+import { customColors } from "@/constants/Colors";
 
 const MOCK_ENTRIES = [
   {
@@ -57,6 +61,19 @@ const ENTRY_MARGIN = 10;
 
 export default function TimelineScreen() {
   const { entries } = useEntries();
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const scrollToTop = useCallback(() => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Scroll to top when the screen is focused
+      scrollToTop();
+    }, [scrollToTop])
+  );
+
   // Use mock entries for development, comment out for production
   const sortedEntries = MOCK_ENTRIES.sort(
     (a, b) => b.date.getTime() - a.date.getTime()
@@ -66,14 +83,16 @@ export default function TimelineScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.timelineLine}>
             <LinearGradient
-              colors={["#4FD1C5", "#2C5282"]}
+              colors={[customColors.lightTeal, customColors.lightBlue]}
               start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
+              end={{ x: 1, y: 1 }}
               style={styles.timelineGradient}
             />
           </View>
@@ -93,14 +112,19 @@ export default function TimelineScreen() {
                     isLeft ? styles.leftEntry : styles.rightEntry,
                   ]}
                 >
-                  <ThemedView style={styles.entryContent}>
+                  <LinearGradient
+                    colors={[customColors.lightTeal, customColors.lightBlue]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.entryContent}
+                  >
                     <ThemedText style={styles.category}>
                       {entry.favorite}
                     </ThemedText>
                     <ThemedText style={styles.answer} numberOfLines={3}>
                       {entry.answer}
                     </ThemedText>
-                  </ThemedView>
+                  </LinearGradient>
                 </View>
                 <View
                   style={[
@@ -127,7 +151,7 @@ export default function TimelineScreen() {
           })}
         </ScrollView>
         <LinearGradient
-          colors={["rgba(0,0,0,0.4)", "transparent"]}
+          colors={[customColors.overlay, customColors.transparent]}
           style={styles.topFade}
           pointerEvents="none"
         />
@@ -178,7 +202,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     elevation: 3,
-    shadowColor: "#000",
+    shadowColor: customColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -193,10 +217,9 @@ const styles = StyleSheet.create({
   },
   entryContent: {
     padding: 12,
-    backgroundColor: "#4FD1C5",
   },
   date: {
-    color: "#2C5282",
+    color: customColors.lightBlue,
     fontSize: 13,
     position: "absolute",
     top: 24,
@@ -213,22 +236,22 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   category: {
-    color: "#2C5282",
+    color: customColors.blue,
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 4,
   },
   answer: {
-    color: "#2D3748",
+    color: customColors.textDark,
     fontSize: 14,
   },
   timelineDot: {
     width: TIMELINE_DOT_SIZE,
     height: TIMELINE_DOT_SIZE,
     borderRadius: TIMELINE_DOT_SIZE / 2,
-    backgroundColor: "#4FD1C5",
+    backgroundColor: customColors.teal,
     borderWidth: 3,
-    borderColor: "#2C5282",
+    borderColor: customColors.blue,
     position: "absolute",
     top: 20,
   },
@@ -244,8 +267,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 29,
     height: TIMELINE_LINE_WIDTH,
-    backgroundColor: "#4FD1C5",
-    width: 20,
+    backgroundColor: customColors.teal,
+    width: 10,
   },
   leftConnector: {
     right: "50%",
