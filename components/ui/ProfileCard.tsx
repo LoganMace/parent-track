@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -8,9 +8,10 @@ import { Profile } from "@/context/ProfilesContext";
 
 interface ProfileCardProps {
   profile: Profile;
+  isActive?: boolean;
 }
 
-function calculateAge(birthday: Date): number {
+function calculateAge(birthday: Date): string {
   const today = new Date();
   let age = today.getFullYear() - birthday.getFullYear();
   const monthDiff = today.getMonth() - birthday.getMonth();
@@ -22,10 +23,10 @@ function calculateAge(birthday: Date): number {
     age--;
   }
 
-  return age;
+  return age.toString();
 }
 
-export function ProfileCard({ profile }: ProfileCardProps) {
+export function ProfileCard({ profile, isActive }: ProfileCardProps) {
   const age = calculateAge(profile.birthday);
 
   return (
@@ -42,7 +43,14 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           color={customColors.blue}
         />
         <ThemedView style={styles.profileInfo}>
-          <ThemedText style={styles.profileName}>{profile.name}</ThemedText>
+          <ThemedView style={styles.nameRow}>
+            <ThemedText style={styles.profileName}>{profile.name}</ThemedText>
+            {isActive && (
+              <ThemedView style={styles.activeIndicator}>
+                <ThemedText style={styles.activeText}>Active</ThemedText>
+              </ThemedView>
+            )}
+          </ThemedView>
           <ThemedText style={styles.profileAge}>Age: {age}</ThemedText>
         </ThemedView>
       </LinearGradient>
@@ -71,6 +79,12 @@ const styles = StyleSheet.create({
     gap: 2,
     backgroundColor: customColors.transparent,
   },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: customColors.transparent,
+  },
   profileName: {
     fontSize: 17,
     fontWeight: "600",
@@ -79,5 +93,16 @@ const styles = StyleSheet.create({
   profileAge: {
     fontSize: 13,
     color: customColors.textDark,
+  },
+  activeIndicator: {
+    backgroundColor: customColors.darkGray,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  activeText: {
+    fontSize: 12,
+    color: customColors.teal,
+    fontWeight: "600",
   },
 });

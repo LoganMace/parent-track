@@ -1,66 +1,62 @@
-import { StyleSheet, ScrollView, View, Dimensions } from "react-native";
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { SafeAreaView } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useEntries } from "@/context/EntriesContext";
+import { useProfiles } from "@/context/ProfilesContext";
 import { LinearGradient } from "expo-linear-gradient";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useRef, useCallback } from "react";
 import React from "react";
 import { customColors } from "@/constants/Colors";
-
-const MOCK_ENTRIES = [
-  {
-    date: new Date("2024-03-20"),
-    favorite: "Color",
-    answer:
-      "Deep ocean blue - it reminds me of diving in the Great Barrier Reef",
-  },
-  {
-    date: new Date("2024-02-14"),
-    favorite: "Food",
-    answer: "Homemade lasagna with my grandmother's secret recipe",
-  },
-  {
-    date: new Date("2023-12-25"),
-    favorite: "Movie",
-    answer:
-      "The Shawshank Redemption - a timeless story of hope and friendship",
-  },
-  {
-    date: new Date("2023-10-31"),
-    favorite: "Animal",
-    answer: "Red pandas because they're playful and adorable",
-  },
-  {
-    date: new Date("2023-08-15"),
-    favorite: "Song",
-    answer: "Bohemian Rhapsody - it's like multiple songs in one epic journey",
-  },
-  {
-    date: new Date("2023-06-21"),
-    favorite: "Game",
-    answer: "The Legend of Zelda: Breath of the Wild - endless exploration",
-  },
-  {
-    date: new Date("2023-01-01"),
-    favorite: "Sport",
-    answer: "Rock climbing - it's both physically and mentally challenging",
-  },
-  {
-    date: new Date("2022-12-31"),
-    favorite: "Show",
-    answer: "Breaking Bad - the character development is unmatched",
-  },
-];
-
+import MOCK_ENTRIES from "@/components/__mocks__/mockEntries";
 const TIMELINE_DOT_SIZE = 20;
 const TIMELINE_LINE_WIDTH = 3;
 const ENTRY_WIDTH = Dimensions.get("window").width * 0.4;
 const ENTRY_MARGIN = 10;
 
+function EmptyState({
+  onNavigate,
+  emptyType,
+}: {
+  onNavigate: () => void;
+  emptyType: "profile" | "entry";
+}) {
+  return (
+    <ThemedView style={styles.emptyContainer}>
+      <ThemedText style={styles.emptyTitle}>
+        No {emptyType === "profile" ? "Profiles" : "Entries"} Yet
+      </ThemedText>
+      <ThemedText style={styles.emptyText}>
+        {emptyType === "profile"
+          ? "Start creating profiles for your children to track their journey."
+          : "Start creating entries to track your children's memories and experiences."}
+      </ThemedText>
+      <TouchableOpacity onPress={onNavigate} style={styles.createButton}>
+        <LinearGradient
+          colors={[customColors.teal, customColors.blue]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradientButton}
+        >
+          <ThemedText style={styles.createButtonText}>
+            {emptyType === "profile" ? "Create Profile" : "Create Entry"}
+          </ThemedText>
+        </LinearGradient>
+      </TouchableOpacity>
+    </ThemedView>
+  );
+}
+
 export default function TimelineScreen() {
   const { entries } = useEntries();
+  const { profiles, activeProfileId } = useProfiles();
   const scrollViewRef = useRef<ScrollView>(null);
 
   const scrollToTop = useCallback(() => {
@@ -69,25 +65,46 @@ export default function TimelineScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      // Scroll to top when the screen is focused
       scrollToTop();
     }, [scrollToTop])
   );
 
-  // Use mock entries for development, comment out for production
-  const sortedEntries = MOCK_ENTRIES.sort(
+  const filteredEntries = entries.filter(
+    (entry) => entry.profileId === activeProfileId
+  );
+
+  const sortedEntries = filteredEntries.sort(
     (a, b) => b.date.getTime() - a.date.getTime()
   );
+
+  const handleNavigate = () => {
+    if (!activeProfileId) {
+      router.push("/(tabs)/profiles");
+    } else {
+      router.push("/(tabs)/create");
+    }
+  };
+
+  const activeProfile = profiles?.find(
+    (profile) => profile.id === activeProfileId
+  );
+  const profileName = activeProfile ? activeProfile.name : "No Active Profile";
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
+        {/* {!activeProfileId ? (
+          <EmptyState emptyType="profile" onNavigate={handleNavigate} />
+        ) : filteredEntries.length === 0 ? (
+          <EmptyState emptyType="entry" onNavigate={handleNavigate} />
+        ) : ( */}
         <ScrollView
           ref={scrollViewRef}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          <ThemedText style={styles.profileName}>{profileName}</ThemedText>
           <View style={styles.timelineLine}>
             <LinearGradient
               colors={[customColors.lightTeal, customColors.lightBlue]}
@@ -96,7 +113,7 @@ export default function TimelineScreen() {
               style={styles.timelineGradient}
             />
           </View>
-          {sortedEntries.map((entry, index) => {
+          {MOCK_ENTRIES.map((entry, index) => {
             const isLeft = index % 2 === 0;
             return (
               <View
@@ -119,10 +136,30 @@ export default function TimelineScreen() {
                     style={styles.entryContent}
                   >
                     <ThemedText style={styles.category}>
-                      {entry.favorite}
+                      {entry.type === "Favorite"
+                        ? entry.category
+                        : entry.type === "Measurement"
+                        ? entry.measurement
+                        : entry.type === "Memory"
+                        ? entry.title
+                        : entry.type === "Journal"
+                        ? entry.title
+                        : entry.type === "Milestone"
+                        ? entry.category
+                        : ""}
                     </ThemedText>
                     <ThemedText style={styles.answer} numberOfLines={3}>
-                      {entry.answer}
+                      {entry.type === "Favorite"
+                        ? entry.answer
+                        : entry.type === "Measurement"
+                        ? `${entry.value} ${entry.unit}`
+                        : entry.type === "Memory"
+                        ? entry.description
+                        : entry.type === "Journal"
+                        ? entry.content
+                        : entry.type === "Milestone"
+                        ? entry.description
+                        : ""}
                     </ThemedText>
                   </LinearGradient>
                 </View>
@@ -150,6 +187,7 @@ export default function TimelineScreen() {
             );
           })}
         </ScrollView>
+        {/* )} */}
         <LinearGradient
           colors={[customColors.overlay, customColors.transparent]}
           style={styles.topFade}
@@ -180,6 +218,7 @@ const styles = StyleSheet.create({
     width: TIMELINE_LINE_WIDTH,
     height: "100%",
     marginLeft: -TIMELINE_LINE_WIDTH / 2,
+    paddingTop: 80,
   },
   timelineGradient: {
     flex: 1,
@@ -249,7 +288,7 @@ const styles = StyleSheet.create({
     width: TIMELINE_DOT_SIZE,
     height: TIMELINE_DOT_SIZE,
     borderRadius: TIMELINE_DOT_SIZE / 2,
-    backgroundColor: customColors.teal,
+    backgroundColor: customColors.lightTeal,
     borderWidth: 3,
     borderColor: customColors.blue,
     position: "absolute",
@@ -267,7 +306,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 29,
     height: TIMELINE_LINE_WIDTH,
-    backgroundColor: customColors.teal,
+    backgroundColor: customColors.lightTeal,
     width: 10,
   },
   leftConnector: {
@@ -285,5 +324,42 @@ const styles = StyleSheet.create({
     right: 0,
     height: 50,
     zIndex: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: customColors.lightBlue,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: customColors.textGray,
+    textAlign: "center",
+    marginVertical: 10,
+  },
+  createButton: {
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  createButtonText: {
+    color: customColors.white,
+    fontWeight: "bold",
+  },
+  gradientButton: {
+    padding: 12,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: customColors.lightBlue,
+    padding: 20,
+    textAlign: "center",
   },
 });

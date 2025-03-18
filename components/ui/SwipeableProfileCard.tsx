@@ -14,14 +14,18 @@ import { SharedValue } from "react-native-reanimated";
 
 interface SwipeableProfileCardProps {
   profile: Profile;
+  isActive?: boolean;
   onEdit: (profile: Profile, closeSwipe: () => void) => void;
   onDelete: (profile: Profile) => void;
+  onSetActive: (profile: Profile) => void;
 }
 
 export function SwipeableProfileCard({
   profile,
+  isActive,
   onEdit,
   onDelete,
+  onSetActive,
 }: SwipeableProfileCardProps) {
   const swipeableRef = useRef<SwipeableMethods>(null);
 
@@ -35,6 +39,18 @@ export function SwipeableProfileCard({
   ) => {
     return (
       <ThemedView style={styles.actionsContainer}>
+        {!isActive && (
+          <TouchableOpacity
+            style={[styles.actionButton, styles.activeButton]}
+            onPress={() => {
+              closeSwipe();
+              onSetActive(profile);
+            }}
+          >
+            <IconSymbol name="star.fill" size={24} color={customColors.white} />
+            <ThemedText style={styles.actionText}>Set Active</ThemedText>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={[styles.actionButton, styles.editButton]}
           onPress={() => onEdit(profile, closeSwipe)}
@@ -62,7 +78,7 @@ export function SwipeableProfileCard({
       renderRightActions={renderRightActions}
       rightThreshold={40}
     >
-      <ProfileCard profile={profile} />
+      <ProfileCard profile={profile} isActive={isActive} />
     </Swipeable>
   );
 }
@@ -79,6 +95,10 @@ const styles = StyleSheet.create({
     width: 80,
     height: "100%",
     borderRadius: 12,
+  },
+  activeButton: {
+    backgroundColor: customColors.teal,
+    marginRight: 8,
   },
   editButton: {
     backgroundColor: customColors.blue,
