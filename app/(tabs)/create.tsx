@@ -96,8 +96,14 @@ function EmptyState() {
 
 export default function CreateScreen() {
   const { addEntry } = useEntries();
-  const { profiles } = useProfiles();
-  const [selectedProfile, setSelectedProfile] = useState<string>("");
+  const { profiles, activeProfileId } = useProfiles();
+
+  // Find the active profile name
+  const activeProfile = profiles.find((p) => p.id === activeProfileId);
+  const [selectedProfile, setSelectedProfile] = useState<string>(
+    activeProfile?.name || ""
+  );
+
   const [entryType, setEntryType] = useState<EntryType>("Favorite");
   const [entryDate, setEntryDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -149,10 +155,17 @@ export default function CreateScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      // Update selected profile when active profile changes
+      const currentActiveProfile = profiles.find(
+        (p) => p.id === activeProfileId
+      );
+      if (currentActiveProfile) {
+        setSelectedProfile(currentActiveProfile.name);
+      }
       return () => {
         resetForm();
       };
-    }, [resetForm])
+    }, [resetForm, activeProfileId, profiles])
   );
 
   const isFormValid = () => {
@@ -177,6 +190,12 @@ export default function CreateScreen() {
   const handleSave = () => {
     if (!isFormValid()) return;
 
+    // Find the profile ID from the selected name
+    const selectedProfileData = profiles.find(
+      (p) => p.name === selectedProfile
+    );
+    if (!selectedProfileData) return;
+
     let entry: Omit<Entry, "id">;
 
     switch (entryType) {
@@ -184,7 +203,7 @@ export default function CreateScreen() {
         entry = {
           type: "Favorite",
           date: entryDate,
-          profileId: selectedProfile,
+          profileId: selectedProfileData.id,
           category: favoriteCategory,
           answer: favoriteAnswer,
         } as Omit<FavoriteEntry, "id">;
@@ -193,7 +212,7 @@ export default function CreateScreen() {
         entry = {
           type: "Measurement",
           date: entryDate,
-          profileId: selectedProfile,
+          profileId: selectedProfileData.id,
           measurement: measurementType,
           value: parseFloat(measurementValue),
           unit: measurementUnit,
@@ -203,7 +222,7 @@ export default function CreateScreen() {
         entry = {
           type: "Memory",
           date: entryDate,
-          profileId: selectedProfile,
+          profileId: selectedProfileData.id,
           title: memoryTitle,
           description: memoryDescription,
           mood: memoryMood || undefined,
@@ -213,7 +232,7 @@ export default function CreateScreen() {
         entry = {
           type: "Journal",
           date: entryDate,
-          profileId: selectedProfile,
+          profileId: selectedProfileData.id,
           title: journalTitle,
           content: journalContent,
         } as Omit<JournalEntry, "id">;
@@ -222,7 +241,7 @@ export default function CreateScreen() {
         entry = {
           type: "Milestone",
           date: entryDate,
-          profileId: selectedProfile,
+          profileId: selectedProfileData.id,
           title: milestoneTitle,
           description: milestoneDescription,
           category: milestoneCategory,
@@ -473,7 +492,7 @@ export default function CreateScreen() {
                 <LinearGradient
                   colors={
                     isFormValid()
-                      ? [customColors.teal, customColors.blue]
+                      ? [customColors.lightTeal, customColors.lightBlue]
                       : [
                           customColors.disabledGray,
                           customColors.disabledDarkGray,

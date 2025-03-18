@@ -70,7 +70,7 @@ export function DatePicker({
           style={[styles.dateButton, buttonStyle]}
         >
           <LinearGradient
-            colors={[customColors.teal, customColors.blue]}
+            colors={[customColors.lightTeal, customColors.lightBlue]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradientButton}
@@ -112,6 +112,8 @@ export function DatePicker({
                 mode="date"
                 display={Platform.OS === "ios" ? "spinner" : "default"}
                 onChange={handleDateChange}
+                maximumDate={new Date()}
+                minimumDate={new Date(1900, 0, 1)}
               />
               <ThemedView style={styles.datePickerButtons}>
                 <TouchableOpacity
@@ -134,7 +136,7 @@ export function DatePicker({
                   style={styles.datePickerButton}
                 >
                   <LinearGradient
-                    colors={[customColors.teal, customColors.blue]}
+                    colors={[customColors.lightTeal, customColors.lightBlue]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.gradientButton}

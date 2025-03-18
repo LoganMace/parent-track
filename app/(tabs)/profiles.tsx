@@ -23,7 +23,14 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Profile } from "@/context/ProfilesContext";
 
 export default function ProfilesScreen() {
-  const { profiles, addProfile, updateProfile, deleteProfile } = useProfiles();
+  const {
+    profiles,
+    addProfile,
+    updateProfile,
+    deleteProfile,
+    activeProfileId,
+    setActiveProfile,
+  } = useProfiles();
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
@@ -100,6 +107,10 @@ export default function ProfilesScreen() {
     });
   };
 
+  const handleSetActiveProfile = (profile: Profile) => {
+    setActiveProfile(profile.id);
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.safeArea}>
@@ -140,10 +151,12 @@ export default function ProfilesScreen() {
                   <SwipeableProfileCard
                     key={profile.id}
                     profile={profile}
+                    isActive={profile.id === activeProfileId}
                     onEdit={(profile, closeSwipe) =>
                       handleEditProfile(profile, closeSwipe)
                     }
                     onDelete={handleDeleteProfile}
+                    onSetActive={handleSetActiveProfile}
                   />
                 ))
               )}
