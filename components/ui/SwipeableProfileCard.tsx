@@ -7,7 +7,7 @@ import Swipeable, {
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { customColors } from "@/constants/Colors";
+import { customColors } from "@/constants/colors";
 import { Profile } from "@/context/ProfilesContext";
 import { ProfileCard } from "./ProfileCard";
 import { SharedValue } from "react-native-reanimated";

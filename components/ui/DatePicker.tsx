@@ -11,7 +11,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { customColors } from "@/constants/Colors";
+import { customColors } from "@/constants/colors";
 
 interface DatePickerProps {
   value: Date;

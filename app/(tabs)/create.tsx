@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useReducer, useCallback } from "react";
 import {
   StyleSheet,
   ScrollView,
@@ -15,8 +15,6 @@ import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import {
   useEntries,
-  EntryType,
-  Entry,
   FavoriteEntry,
   MeasurementEntry,
   MemoryEntry,
@@ -26,44 +24,77 @@ import {
 import { useProfiles } from "@/context/ProfilesContext";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { customColors } from "@/constants/Colors";
+import { InputGroup } from "@/components/ui/InputGroup";
+import { customColors } from "@/constants/colors";
+import { ENTRY_TYPES } from "@/constants/entryConstants";
 
-const ENTRY_TYPES: EntryType[] = [
-  "Favorite",
-  "Measurement",
-  "Memory",
-  "Journal",
-  "Milestone",
-];
+// Define the state type
+interface State {
+  selectedProfile: string;
+  entryType: string;
+  entryDate: Date;
+  showDatePicker: boolean;
+  favoriteCategory: string;
+  favoriteAnswer: string;
+  measurementType: string;
+  measurementValue: string;
+  measurementUnit: string;
+  memoryTitle: string;
+  memoryDescription: string;
+  memoryMood: string;
+  journalTitle: string;
+  journalContent: string;
+  milestoneTitle: string;
+  milestoneDescription: string;
+  milestoneCategory: string;
+}
 
-const FAVORITE_CATEGORIES = [
-  "Color",
-  "Food",
-  "Animal",
-  "Movie",
-  "Show",
-  "Song",
-  "Sport",
-  "Game",
-];
+// Define the action types
+interface ResetFormAction {
+  type: "RESET_FORM";
+}
 
-const MEASUREMENT_TYPES = [
-  "Height",
-  "Weight",
-  "Head Circumference",
-  "Shoe Size",
-  "Clothing Size",
-];
+interface SetFieldAction {
+  type: "SET_FIELD";
+  field: keyof State;
+  value: string | Date | boolean;
+}
 
-const MILESTONE_CATEGORIES = [
-  "First Steps",
-  "First Words",
-  "First Day of School",
-  "Lost Tooth",
-  "Birthday",
-  "Achievement",
-  "Other",
-];
+type Action = ResetFormAction | SetFieldAction;
+
+const initialState: State = {
+  selectedProfile: "",
+  entryType: "Favorite",
+  entryDate: new Date(),
+  showDatePicker: false,
+  favoriteCategory: "",
+  favoriteAnswer: "",
+  measurementType: "",
+  measurementValue: "",
+  measurementUnit: "",
+  memoryTitle: "",
+  memoryDescription: "",
+  memoryMood: "",
+  journalTitle: "",
+  journalContent: "",
+  milestoneTitle: "",
+  milestoneDescription: "",
+  milestoneCategory: "",
+};
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "RESET_FORM":
+      return initialState;
+    case "SET_FIELD":
+      return {
+        ...state,
+        [action.field]: action.value,
+      };
+    default:
+      return state;
+  }
+}
 
 function EmptyState() {
   const router = useRouter();
@@ -98,69 +129,23 @@ export default function CreateScreen() {
   const { addEntry } = useEntries();
   const { profiles, activeProfileId } = useProfiles();
 
-  // Find the active profile name
-  const activeProfile = profiles.find((p) => p.id === activeProfileId);
-  const [selectedProfile, setSelectedProfile] = useState<string>(
-    activeProfile?.name || ""
-  );
-
-  const [entryType, setEntryType] = useState<EntryType>("Favorite");
-  const [entryDate, setEntryDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  // Favorite type fields
-  const [favoriteCategory, setFavoriteCategory] = useState("");
-  const [favoriteAnswer, setFavoriteAnswer] = useState("");
-
-  // Measurement type fields
-  const [measurementType, setMeasurementType] = useState("");
-  const [measurementValue, setMeasurementValue] = useState("");
-  const [measurementUnit, setMeasurementUnit] = useState("");
-
-  // Memory type fields
-  const [memoryTitle, setMemoryTitle] = useState("");
-  const [memoryDescription, setMemoryDescription] = useState("");
-  const [memoryMood, setMemoryMood] = useState("");
-
-  // Journal type fields
-  const [journalTitle, setJournalTitle] = useState("");
-  const [journalContent, setJournalContent] = useState("");
-
-  // Milestone type fields
-  const [milestoneTitle, setMilestoneTitle] = useState("");
-  const [milestoneDescription, setMilestoneDescription] = useState("");
-  const [milestoneCategory, setMilestoneCategory] = useState("");
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   const resetForm = useCallback(() => {
-    setSelectedProfile("");
-    setEntryType("Favorite");
-    setEntryDate(new Date());
-    setShowDatePicker(false);
-
-    // Reset all type-specific fields
-    setFavoriteCategory("");
-    setFavoriteAnswer("");
-    setMeasurementType("");
-    setMeasurementValue("");
-    setMeasurementUnit("");
-    setMemoryTitle("");
-    setMemoryDescription("");
-    setMemoryMood("");
-    setJournalTitle("");
-    setJournalContent("");
-    setMilestoneTitle("");
-    setMilestoneDescription("");
-    setMilestoneCategory("");
+    dispatch({ type: "RESET_FORM" });
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      // Update selected profile when active profile changes
       const currentActiveProfile = profiles.find(
         (p) => p.id === activeProfileId
       );
       if (currentActiveProfile) {
-        setSelectedProfile(currentActiveProfile.name);
+        dispatch({
+          type: "SET_FIELD",
+          field: "selectedProfile",
+          value: currentActiveProfile.name,
+        });
       }
       return () => {
         resetForm();
@@ -168,83 +153,92 @@ export default function CreateScreen() {
     }, [resetForm, activeProfileId, profiles])
   );
 
-  const isFormValid = () => {
-    if (!selectedProfile) return false;
+  const isFormValid = (): boolean => {
+    if (!state.selectedProfile) return false;
 
-    switch (entryType) {
+    switch (state.entryType) {
       case "Favorite":
-        return Boolean(favoriteCategory && favoriteAnswer.trim());
+        return Boolean(state.favoriteCategory && state.favoriteAnswer.trim());
       case "Measurement":
-        return Boolean(measurementType && measurementValue && measurementUnit);
+        return Boolean(
+          state.measurementType &&
+            state.measurementValue &&
+            state.measurementUnit
+        );
       case "Memory":
-        return Boolean(memoryTitle.trim() && memoryDescription.trim());
+        return Boolean(
+          state.memoryTitle.trim() && state.memoryDescription.trim()
+        );
       case "Journal":
-        return Boolean(journalTitle.trim() && journalContent.trim());
+        return Boolean(
+          state.journalTitle.trim() && state.journalContent.trim()
+        );
       case "Milestone":
-        return Boolean(milestoneTitle.trim() && milestoneDescription.trim());
+        return Boolean(
+          state.milestoneTitle.trim() && state.milestoneDescription.trim()
+        );
       default:
         return false;
     }
   };
 
-  const handleSave = () => {
+  const handleSave = (): void => {
     if (!isFormValid()) return;
 
-    // Find the profile ID from the selected name
     const selectedProfileData = profiles.find(
-      (p) => p.name === selectedProfile
+      (p) => p.name === state.selectedProfile
     );
     if (!selectedProfileData) return;
 
-    let entry: Omit<Entry, "id">;
+    let entry;
 
-    switch (entryType) {
+    switch (state.entryType) {
       case "Favorite":
         entry = {
           type: "Favorite",
-          date: entryDate,
+          date: state.entryDate,
           profileId: selectedProfileData.id,
-          category: favoriteCategory,
-          answer: favoriteAnswer,
+          category: state.favoriteCategory,
+          answer: state.favoriteAnswer,
         } as Omit<FavoriteEntry, "id">;
         break;
       case "Measurement":
         entry = {
           type: "Measurement",
-          date: entryDate,
+          date: state.entryDate,
           profileId: selectedProfileData.id,
-          measurement: measurementType,
-          value: parseFloat(measurementValue),
-          unit: measurementUnit,
+          measurement: state.measurementType,
+          value: parseFloat(state.measurementValue),
+          unit: state.measurementUnit,
         } as Omit<MeasurementEntry, "id">;
         break;
       case "Memory":
         entry = {
           type: "Memory",
-          date: entryDate,
+          date: state.entryDate,
           profileId: selectedProfileData.id,
-          title: memoryTitle,
-          description: memoryDescription,
-          mood: memoryMood || undefined,
+          title: state.memoryTitle,
+          description: state.memoryDescription,
+          mood: state.memoryMood || undefined,
         } as Omit<MemoryEntry, "id">;
         break;
       case "Journal":
         entry = {
           type: "Journal",
-          date: entryDate,
+          date: state.entryDate,
           profileId: selectedProfileData.id,
-          title: journalTitle,
-          content: journalContent,
+          title: state.journalTitle,
+          content: state.journalContent,
         } as Omit<JournalEntry, "id">;
         break;
       case "Milestone":
         entry = {
           type: "Milestone",
-          date: entryDate,
+          date: state.entryDate,
           profileId: selectedProfileData.id,
-          title: milestoneTitle,
-          description: milestoneDescription,
-          category: milestoneCategory,
+          title: state.milestoneTitle,
+          description: state.milestoneDescription,
+          category: state.milestoneCategory,
         } as Omit<MilestoneEntry, "id">;
         break;
       default:
@@ -255,182 +249,193 @@ export default function CreateScreen() {
     resetForm();
   };
 
-  const renderEntryFields = () => {
-    switch (entryType) {
+  const renderEntryFields = (): JSX.Element | null => {
+    switch (state.entryType) {
       case "Favorite":
         return (
           <>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Category</ThemedText>
-              <Dropdown
-                options={FAVORITE_CATEGORIES}
-                value={favoriteCategory}
-                onChange={setFavoriteCategory}
-                placeholder="Select a category..."
-              />
-            </ThemedView>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Answer</ThemedText>
-              <TextInput
-                style={[styles.textInput, { color: customColors.white }]}
-                value={favoriteAnswer}
-                onChangeText={setFavoriteAnswer}
-                placeholder={
-                  favoriteCategory
-                    ? `What is your favorite ${favoriteCategory}?`
-                    : "Select a category first..."
-                }
-                placeholderTextColor={customColors.textGray}
-                multiline
-              />
-            </ThemedView>
+            <InputGroup
+              label="Category"
+              value={state.favoriteCategory}
+              onChange={(value) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "favoriteCategory",
+                  value,
+                })
+              }
+              placeholder="Select a category..."
+            />
+            <InputGroup
+              label="Answer"
+              value={state.favoriteAnswer}
+              onChange={(value) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "favoriteAnswer",
+                  value,
+                })
+              }
+              placeholder={
+                state.favoriteCategory
+                  ? `What is your favorite ${state.favoriteCategory}?`
+                  : "Select a category first..."
+              }
+              multiline
+            />
           </>
         );
 
       case "Measurement":
         return (
           <>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Type</ThemedText>
-              <Dropdown
-                options={MEASUREMENT_TYPES}
-                value={measurementType}
-                onChange={setMeasurementType}
-                placeholder="Select measurement type..."
-              />
-            </ThemedView>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Value</ThemedText>
-              <TextInput
-                style={[styles.textInput, { color: customColors.white }]}
-                value={measurementValue}
-                onChangeText={setMeasurementValue}
-                placeholder="Enter value..."
-                placeholderTextColor={customColors.textGray}
-                keyboardType="numeric"
-              />
-            </ThemedView>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Unit</ThemedText>
-              <TextInput
-                style={[styles.textInput, { color: customColors.white }]}
-                value={measurementUnit}
-                onChangeText={setMeasurementUnit}
-                placeholder="Enter unit (cm, kg, etc.)..."
-                placeholderTextColor={customColors.textGray}
-              />
-            </ThemedView>
+            <InputGroup
+              label="Type"
+              value={state.measurementType}
+              onChange={(value) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "measurementType",
+                  value,
+                })
+              }
+              placeholder="Select measurement type..."
+            />
+            <InputGroup
+              label="Value"
+              value={state.measurementValue}
+              onChange={(value) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "measurementValue",
+                  value,
+                })
+              }
+              placeholder="Enter value..."
+              keyboardType="numeric"
+            />
+            <InputGroup
+              label="Unit"
+              value={state.measurementUnit}
+              onChange={(value) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "measurementUnit",
+                  value,
+                })
+              }
+              placeholder="Enter unit (cm, kg, etc.)..."
+            />
           </>
         );
 
       case "Memory":
         return (
           <>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Title</ThemedText>
-              <TextInput
-                style={[styles.textInput, { color: customColors.white }]}
-                value={memoryTitle}
-                onChangeText={setMemoryTitle}
-                placeholder="Enter memory title..."
-                placeholderTextColor={customColors.textGray}
-              />
-            </ThemedView>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Description</ThemedText>
-              <TextInput
-                style={[
-                  styles.textInput,
-                  { color: customColors.white, height: 120 },
-                ]}
-                value={memoryDescription}
-                onChangeText={setMemoryDescription}
-                placeholder="Describe this memory..."
-                placeholderTextColor={customColors.textGray}
-                multiline
-              />
-            </ThemedView>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Mood (optional)</ThemedText>
-              <TextInput
-                style={[styles.textInput, { color: customColors.white }]}
-                value={memoryMood}
-                onChangeText={setMemoryMood}
-                placeholder="How were you feeling?"
-                placeholderTextColor={customColors.textGray}
-              />
-            </ThemedView>
+            <InputGroup
+              label="Title"
+              value={state.memoryTitle}
+              onChange={(value) =>
+                dispatch({ type: "SET_FIELD", field: "memoryTitle", value })
+              }
+              placeholder="Enter memory title..."
+            />
+            <InputGroup
+              label="Description"
+              value={state.memoryDescription}
+              onChange={(value) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "memoryDescription",
+                  value,
+                })
+              }
+              placeholder="Describe this memory..."
+              multiline
+            />
+            <InputGroup
+              label="Mood (optional)"
+              value={state.memoryMood}
+              onChange={(value) =>
+                dispatch({ type: "SET_FIELD", field: "memoryMood", value })
+              }
+              placeholder="How were you feeling?"
+            />
           </>
         );
 
       case "Journal":
         return (
           <>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Title</ThemedText>
-              <TextInput
-                style={[styles.textInput, { color: customColors.white }]}
-                value={journalTitle}
-                onChangeText={setJournalTitle}
-                placeholder="Enter journal title..."
-                placeholderTextColor={customColors.textGray}
-              />
-            </ThemedView>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Content</ThemedText>
-              <TextInput
-                style={[
-                  styles.textInput,
-                  { color: customColors.white, height: 200 },
-                ]}
-                value={journalContent}
-                onChangeText={setJournalContent}
-                placeholder="Write your journal entry..."
-                placeholderTextColor={customColors.textGray}
-                multiline
-              />
-            </ThemedView>
+            <InputGroup
+              label="Title"
+              value={state.journalTitle}
+              onChange={(value) =>
+                dispatch({ type: "SET_FIELD", field: "journalTitle", value })
+              }
+              placeholder="Enter journal title..."
+            />
+            <InputGroup
+              label="Content"
+              value={state.journalContent}
+              onChange={(value) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "journalContent",
+                  value,
+                })
+              }
+              placeholder="Write your journal entry..."
+              multiline
+            />
           </>
         );
 
       case "Milestone":
         return (
           <>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Category</ThemedText>
-              <Dropdown
-                options={MILESTONE_CATEGORIES}
-                value={milestoneCategory}
-                onChange={setMilestoneCategory}
-                placeholder="Select milestone category..."
-              />
-            </ThemedView>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Title</ThemedText>
-              <TextInput
-                style={[styles.textInput, { color: customColors.white }]}
-                value={milestoneTitle}
-                onChangeText={setMilestoneTitle}
-                placeholder="Enter milestone title..."
-                placeholderTextColor={customColors.textGray}
-              />
-            </ThemedView>
-            <ThemedView style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>Description</ThemedText>
-              <TextInput
-                style={[
-                  styles.textInput,
-                  { color: customColors.white, height: 120 },
-                ]}
-                value={milestoneDescription}
-                onChangeText={setMilestoneDescription}
-                placeholder="Describe this milestone..."
-                placeholderTextColor={customColors.textGray}
-                multiline
-              />
-            </ThemedView>
+            <InputGroup
+              label="Category"
+              value={state.milestoneCategory}
+              onChange={(value) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "milestoneCategory",
+                  value,
+                })
+              }
+              placeholder="Select milestone category..."
+            />
+            <InputGroup
+              label="Title"
+              value={state.milestoneTitle}
+              onChange={(value) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "milestoneTitle",
+                  value,
+                })
+              }
+              placeholder="Enter milestone title..."
+            />
+            <InputGroup
+              label="Description"
+              value={state.milestoneDescription}
+              onChange={(value) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  field: "milestoneDescription",
+                  value,
+                })
+              }
+              placeholder="Describe this milestone..."
+              multiline
+            />
           </>
         );
+
+      default:
+        return null;
     }
   };
 
@@ -452,8 +457,14 @@ export default function CreateScreen() {
                 <ThemedText style={styles.inputLabel}>Profile</ThemedText>
                 <Dropdown
                   options={profiles.map((p) => p.name)}
-                  value={selectedProfile}
-                  onChange={setSelectedProfile}
+                  value={state.selectedProfile}
+                  onChange={(value) =>
+                    dispatch({
+                      type: "SET_FIELD",
+                      field: "selectedProfile",
+                      value,
+                    })
+                  }
                   placeholder="Select a profile..."
                 />
               </ThemedView>
@@ -462,8 +473,10 @@ export default function CreateScreen() {
                 <ThemedText style={styles.inputLabel}>Entry Type</ThemedText>
                 <Dropdown
                   options={ENTRY_TYPES}
-                  value={entryType}
-                  onChange={(value) => setEntryType(value as EntryType)}
+                  value={state.entryType}
+                  onChange={(value) =>
+                    dispatch({ type: "SET_FIELD", field: "entryType", value })
+                  }
                   placeholder="Select entry type..."
                 />
               </ThemedView>
@@ -471,11 +484,25 @@ export default function CreateScreen() {
               <ThemedView style={styles.inputGroup}>
                 <ThemedText style={styles.inputLabel}>Date</ThemedText>
                 <DatePicker
-                  value={entryDate}
-                  onChange={setEntryDate}
-                  isVisible={showDatePicker}
-                  onClose={() => setShowDatePicker(false)}
-                  onOpen={() => setShowDatePicker(true)}
+                  value={state.entryDate}
+                  onChange={(value) =>
+                    dispatch({ type: "SET_FIELD", field: "entryDate", value })
+                  }
+                  isVisible={state.showDatePicker}
+                  onClose={() =>
+                    dispatch({
+                      type: "SET_FIELD",
+                      field: "showDatePicker",
+                      value: false,
+                    })
+                  }
+                  onOpen={() =>
+                    dispatch({
+                      type: "SET_FIELD",
+                      field: "showDatePicker",
+                      value: true,
+                    })
+                  }
                 />
               </ThemedView>
 

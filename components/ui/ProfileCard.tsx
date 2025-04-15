@@ -2,7 +2,7 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { customColors } from "@/constants/Colors";
+import { customColors } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { Profile } from "@/context/ProfilesContext";
 
