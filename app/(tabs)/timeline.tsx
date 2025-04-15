@@ -15,7 +15,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useRef, useCallback } from "react";
 import React from "react";
 import { customColors } from "@/constants/colors";
-import MOCK_ENTRIES from "@/components/__mocks__/mockEntries";
+// import MOCK_ENTRIES from "@/components/__mocks__/mockEntries";
 const TIMELINE_DOT_SIZE = 20;
 const TIMELINE_LINE_WIDTH = 3;
 const ENTRY_WIDTH = Dimensions.get("window").width * 0.4;
@@ -93,101 +93,101 @@ export default function TimelineScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
-        {/* {!activeProfileId ? (
+        {!activeProfileId ? (
           <EmptyState emptyType="profile" onNavigate={handleNavigate} />
         ) : filteredEntries.length === 0 ? (
           <EmptyState emptyType="entry" onNavigate={handleNavigate} />
-        ) : ( */}
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <ThemedText style={styles.profileName}>{profileName}</ThemedText>
-          <View style={styles.timelineLine}>
-            <LinearGradient
-              colors={[customColors.lightTeal, customColors.lightBlue]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.timelineGradient}
-            />
-          </View>
-          {MOCK_ENTRIES.map((entry, index) => {
-            const isLeft = index % 2 === 0;
-            return (
-              <View
-                key={index}
-                style={[
-                  styles.timelineRow,
-                  isLeft ? styles.leftRow : styles.rightRow,
-                ]}
-              >
+        ) : (
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <ThemedText style={styles.profileName}>{profileName}</ThemedText>
+            <View style={styles.timelineLine}>
+              <LinearGradient
+                colors={[customColors.lightTeal, customColors.lightBlue]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.timelineGradient}
+              />
+            </View>
+            {sortedEntries.map((entry, index) => {
+              const isLeft = index % 2 === 0;
+              return (
                 <View
+                  key={index}
                   style={[
-                    styles.entryContainer,
-                    isLeft ? styles.leftEntry : styles.rightEntry,
+                    styles.timelineRow,
+                    isLeft ? styles.leftRow : styles.rightRow,
                   ]}
                 >
-                  <LinearGradient
-                    colors={[customColors.lightTeal, customColors.lightBlue]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.entryContent}
+                  <View
+                    style={[
+                      styles.entryContainer,
+                      isLeft ? styles.leftEntry : styles.rightEntry,
+                    ]}
                   >
-                    <ThemedText style={styles.category}>
-                      {entry.type === "Favorite"
-                        ? entry.category
-                        : entry.type === "Measurement"
-                        ? entry.measurement
-                        : entry.type === "Memory"
-                        ? entry.title
-                        : entry.type === "Journal"
-                        ? entry.title
-                        : entry.type === "Milestone"
-                        ? entry.category
-                        : ""}
-                    </ThemedText>
-                    <ThemedText style={styles.answer} numberOfLines={3}>
-                      {entry.type === "Favorite"
-                        ? entry.answer
-                        : entry.type === "Measurement"
-                        ? `${entry.value} ${entry.unit}`
-                        : entry.type === "Memory"
-                        ? entry.description
-                        : entry.type === "Journal"
-                        ? entry.content
-                        : entry.type === "Milestone"
-                        ? entry.description
-                        : ""}
-                    </ThemedText>
-                  </LinearGradient>
+                    <LinearGradient
+                      colors={[customColors.lightTeal, customColors.lightBlue]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.entryContent}
+                    >
+                      <ThemedText style={styles.category}>
+                        {entry.type === "Favorite"
+                          ? entry.category
+                          : entry.type === "Measurement"
+                          ? entry.measurement
+                          : entry.type === "Memory"
+                          ? entry.title
+                          : entry.type === "Journal"
+                          ? entry.title
+                          : entry.type === "Milestone"
+                          ? entry.category
+                          : ""}
+                      </ThemedText>
+                      <ThemedText style={styles.answer} numberOfLines={3}>
+                        {entry.type === "Favorite"
+                          ? entry.answer
+                          : entry.type === "Measurement"
+                          ? `${entry.value} ${entry.unit}`
+                          : entry.type === "Memory"
+                          ? entry.description
+                          : entry.type === "Journal"
+                          ? entry.content
+                          : entry.type === "Milestone"
+                          ? entry.description
+                          : ""}
+                      </ThemedText>
+                    </LinearGradient>
+                  </View>
+                  <View
+                    style={[
+                      styles.timelineDot,
+                      isLeft ? styles.leftDot : styles.rightDot,
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.connector,
+                      isLeft ? styles.leftConnector : styles.rightConnector,
+                    ]}
+                  />
+                  <ThemedText
+                    style={[
+                      styles.date,
+                      isLeft ? styles.leftDate : styles.rightDate,
+                    ]}
+                  >
+                    {entry.date.toLocaleDateString()}
+                  </ThemedText>
                 </View>
-                <View
-                  style={[
-                    styles.timelineDot,
-                    isLeft ? styles.leftDot : styles.rightDot,
-                  ]}
-                />
-                <View
-                  style={[
-                    styles.connector,
-                    isLeft ? styles.leftConnector : styles.rightConnector,
-                  ]}
-                />
-                <ThemedText
-                  style={[
-                    styles.date,
-                    isLeft ? styles.leftDate : styles.rightDate,
-                  ]}
-                >
-                  {entry.date.toLocaleDateString()}
-                </ThemedText>
-              </View>
-            );
-          })}
-        </ScrollView>
-        {/* )} */}
+              );
+            })}
+          </ScrollView>
+        )}
         <LinearGradient
           colors={[customColors.overlay, customColors.transparent]}
           style={styles.topFade}
