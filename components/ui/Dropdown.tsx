@@ -10,7 +10,7 @@ import {
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { customColors } from "@/constants/Colors";
+import { customColors } from "@/constants/colors";
 
 interface DropdownProps {
   options: string[];

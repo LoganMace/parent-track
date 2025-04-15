@@ -14,7 +14,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { SwipeableProfileCard } from "@/components/ui/SwipeableProfileCard";
-import { customColors } from "@/constants/Colors";
+import { customColors } from "@/constants/colors";
 import { useState } from "react";
 import { useProfiles } from "@/context/ProfilesContext";
 import DateTimePicker from "@react-native-community/datetimepicker";

@@ -5,7 +5,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useEntries } from "@/context/EntriesContext";
 import { useProfiles } from "@/context/ProfilesContext";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { customColors } from "@/constants/Colors";
+import { customColors } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function HomeScreen() {
@@ -23,7 +23,7 @@ export default function HomeScreen() {
         <ScrollView style={styles.scrollView}>
           <ThemedView style={styles.welcomeSection}>
             <ThemedText style={styles.welcomeTitle}>
-              Welcome to Little Memories
+              Welcome to Parent Track
             </ThemedText>
             <ThemedText style={styles.welcomeText}>
               Document your child's evolving favorites and cherished memories as

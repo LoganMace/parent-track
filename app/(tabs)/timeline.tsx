@@ -14,7 +14,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { useRef, useCallback } from "react";
 import React from "react";
-import { customColors } from "@/constants/Colors";
+import { customColors } from "@/constants/colors";
 import MOCK_ENTRIES from "@/components/__mocks__/mockEntries";
 const TIMELINE_DOT_SIZE = 20;
 const TIMELINE_LINE_WIDTH = 3;
